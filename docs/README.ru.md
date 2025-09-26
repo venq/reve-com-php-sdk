@@ -169,6 +169,7 @@ php composer lint  # PHP_CodeSniffer (PSR12)
 ## Примеры
 
 - `examples/basic.php` — полный цикл: генерация, ожидание, remix.
+- `examples/two-image-outfit.php` — пример комбинирования двух изображений: базовое фото модели и референс одежды для редактирования.
 - `ImageSource::fromStream()` полезен для интеграций без файловой системы.
 
 ## Диагностика

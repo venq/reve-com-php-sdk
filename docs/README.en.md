@@ -170,6 +170,7 @@ The test suite ships with unit tests for DTO validation and polling logic. PHPSt
 ## Examples
 
 - `examples/basic.php` demonstrates end-to-end generation, polling, and remix.
+- `examples/two-image-outfit.php` shows how to keep the first image as the base model and borrow garments from a second reference via an edit task.
 - Use `ImageSource::fromStream()` for in-memory buffers when integrating with frameworks.
 
 ## Troubleshooting
