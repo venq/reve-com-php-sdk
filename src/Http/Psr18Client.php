@@ -1,45 +1,46 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Reve\SDK\Http;
 
-use DateTimeImmutable;
-use GuzzleHttp\Client as GuzzleClient;
-use GuzzleHttp\Exception\GuzzleException;
-use LogicException;
+use GuzzleHttp\Psr7\Request;
 use Psr\Http\Client\ClientExceptionInterface;
+use Psr\Http\Client\ClientInterface as PsrClientInterface;
+use Psr\Http\Message\RequestFactoryInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
 use Reve\SDK\Config\ClientConfig;
-use Reve\SDK\Contracts\SleeperInterface;
-use Reve\SDK\Exceptions\ReveException;
+use Reve\SDK\Exceptions\HttpException;
+use Reve\SDK\Exceptions\ServerException;
+use Reve\SDK\Exceptions\UnauthorizedException;
+use Reve\SDK\Exceptions\TooManyRequestsException;
 
 final class Psr18Client implements ClientInterface
 {
     private ClientConfig $config;
 
-    private GuzzleClient $client;
+    private \GuzzleHttp\Client $client;
 
     private LoggerInterface $logger;
 
-    private SleeperInterface $sleeper;
+    private \Reve\SDK\Contracts\SleeperInterface $sleeper;
 
     public function __construct(
         ?ClientConfig $config = null,
-        ?GuzzleClient $client = null,
+        ?\GuzzleHttp\Client $client = null,
         ?LoggerInterface $logger = null,
-        ?SleeperInterface $sleeper = null
+        ?\Reve\SDK\Contracts\SleeperInterface $sleeper = null
     ) {
         $this->config = $config ?? new ClientConfig();
-        $this->client = $client ?? new GuzzleClient([
+        $this->client = $client ?? new \GuzzleHttp\Client([
             'http_errors' => false,
             'timeout' => $this->config->getTimeout(),
             'connect_timeout' => $this->config->getConnectTimeout(),
         ]);
-        $this->logger = $logger ?? new NullLogger();
-        $this->sleeper = $sleeper ?? new NativeSleeper();
+        $this->logger = $logger ?? new \Psr\Log\NullLogger();
+        $this->sleeper = $sleeper ?? new \Reve\SDK\Http\NativeSleeper();
     }
 
     public function getConfig(): ClientConfig
@@ -66,8 +67,8 @@ final class Psr18Client implements ClientInterface
                 'timeout' => $this->config->getTimeout(),
                 'connect_timeout' => $this->config->getConnectTimeout(),
             ]);
-        } catch (GuzzleException $exception) {
-            throw new class('HTTP client error: ' . $exception->getMessage(), 0, $exception) extends ReveException implements ClientExceptionInterface {
+        } catch (\GuzzleHttp\Exception\GuzzleException $exception) {
+            throw new class ('HTTP client error: ' . $exception->getMessage(), 0, $exception) extends \Reve\SDK\Exceptions\ReveException implements ClientExceptionInterface {
             };
         }
     }
@@ -109,7 +110,7 @@ final class Psr18Client implements ClientInterface
         }
 
         if (! $lastResponse instanceof ResponseInterface) {
-            throw new LogicException('Unexpected retry state without response.');
+            throw new \LogicException('Unexpected retry state without response.');
         }
 
         return $lastResponse;
@@ -131,8 +132,8 @@ final class Psr18Client implements ClientInterface
         }
 
         try {
-            $date = new DateTimeImmutable($header);
-            $diff = $date->format('U.u') - (float) (new DateTimeImmutable())->format('U.u');
+            $date = new \DateTimeImmutable($header);
+            $diff = $date->format('U.u') - (float) (new \DateTimeImmutable())->format('U.u');
             return max(0.1, $diff);
         } catch (\Exception) {
             return null;
