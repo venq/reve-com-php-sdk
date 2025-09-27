@@ -37,8 +37,11 @@ final class ReveClient
 
     private ?PollingClient $pollingClient = null;
 
-    public function __construct(?ClientConfig $config = null, ?ClientInterface $httpClient = null, ?LoggerInterface $logger = null)
-    {
+    public function __construct(
+        ?ClientConfig $config = null,
+        ?ClientInterface $httpClient = null,
+        ?LoggerInterface $logger = null
+    ) {
         $this->config = $config ?? ClientConfig::fromEnv();
         $this->logger = $logger ?? new NullLogger();
         $this->httpClient = $httpClient ?? new Psr18Client($this->config, null, $this->logger);
@@ -106,7 +109,9 @@ final class ReveClient
         $response = $this->httpClient->sendRequest($httpRequest);
         $this->throwIfError($response);
         $data = $this->decodeJson($response, 'editImage');
-        return new EditImageResponse((string) ($data['task_id'] ?? ''), isset($data['warnings']) ? (array) $data['warnings'] : null);
+        $taskId = (string) ($data['task_id'] ?? '');
+        $warnings = isset($data['warnings']) ? (array) $data['warnings'] : null;
+        return new EditImageResponse($taskId, $warnings);
     }
 
     public function remix(RemixRequest $request): RemixResponse
@@ -129,7 +134,9 @@ final class ReveClient
         $response = $this->httpClient->sendRequest($httpRequest);
         $this->throwIfError($response);
         $data = $this->decodeJson($response, 'remix');
-        return new RemixResponse((string) ($data['task_id'] ?? ''), isset($data['warnings']) ? (array) $data['warnings'] : null);
+        $taskId = (string) ($data['task_id'] ?? '');
+        $warnings = isset($data['warnings']) ? (array) $data['warnings'] : null;
+        return new RemixResponse($taskId, $warnings);
     }
 
     /**
@@ -265,7 +272,10 @@ final class ReveClient
     {
         if ($this->config->isPreview()) {
             $projectId = $this->requireProjectId();
-            return $this->config->getBaseUrl() . '/api/project/' . rawurlencode($projectId) . '/generation/' . rawurlencode($taskId);
+            $base = $this->config->getBaseUrl();
+            $encodedProjectId = rawurlencode($projectId);
+            $encodedTaskId = rawurlencode($taskId);
+            return $base . '/api/project/' . $encodedProjectId . '/generation/' . $encodedTaskId;
         }
 
         return $this->config->getBaseUrl() . '/v1/tasks/' . rawurlencode($taskId);

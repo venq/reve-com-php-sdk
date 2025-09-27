@@ -31,8 +31,11 @@ final class PollingClient
         $this->sleeper = $sleeper ?? new NativeSleeper();
     }
 
-    public function waitUntilCompleted(string $taskId, int $intervalSeconds = 2, int $timeoutSeconds = 300): CompletedGeneration
-    {
+    public function waitUntilCompleted(
+        string $taskId,
+        int $intervalSeconds = 2,
+        int $timeoutSeconds = 300
+    ): CompletedGeneration {
         $taskId = trim($taskId);
         if ($taskId === '') {
             throw new InvalidArgumentException('Task ID must not be empty.');

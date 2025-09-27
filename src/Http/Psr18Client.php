@@ -68,8 +68,8 @@ final class Psr18Client implements ClientInterface
                 'connect_timeout' => $this->config->getConnectTimeout(),
             ]);
         } catch (\GuzzleHttp\Exception\GuzzleException $exception) {
-            throw new class ('HTTP client error: ' . $exception->getMessage(), 0, $exception) extends \Reve\SDK\Exceptions\ReveException implements ClientExceptionInterface {
-            };
+            $message = 'HTTP client error: ' . $exception->getMessage();
+            throw new \Reve\SDK\Exceptions\HttpClientException($message, 0, $exception);
         }
     }
 
